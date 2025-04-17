@@ -36,3 +36,6 @@ yarn-error.*
 *.tsbuildinfo
 
 .codegpt
+
+# Firebase Admin SDK key - DO NOT COMMIT!
+wisehands-44e84-firebase-adminsdk-g4e9v-530755ee37.json
