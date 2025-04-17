@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "493097866903",
+    "project_id": "wisehands-44e84",
+    "storage_bucket": "wisehands-44e84.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493097866903:android:49d7bf12e830bbbfd0fbd2",
+        "android_client_info": {
+          "package_name": "uk.jrinvestments.wi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "493097866903-tg3rdgu07api0vj0qm6hk1dm1ukevqa6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzJ-0jv-ist22hGndSXgB2-inU9ov4eQs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "493097866903-tg3rdgu07api0vj0qm6hk1dm1ukevqa6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
