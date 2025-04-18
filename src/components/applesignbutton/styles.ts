@@ -5,15 +5,15 @@ export const s = StyleSheet.create({
     container: {
         flexDirection: 'row',
         gap: 10,
-        backgroundColor: colors.green.light,
+        backgroundColor: colors.gray[300],
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 10,
-        height: 58,
+        borderRadius: 8,
+        height: 50,
     },
     title: {
         fontFamily: fontFamily.bold,
-        fontSize: 20,
-        color: colors.white.white1,
+        fontSize: 16,
+        color: colors.black.default,
     }
 });

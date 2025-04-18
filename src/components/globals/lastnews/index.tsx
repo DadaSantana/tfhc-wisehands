@@ -28,9 +28,6 @@ export function LastNews() {
 
     return (
         <View style={s.container}>
-            <View>
-                <Text style={s.title}>Útimas Novidades</Text>
-            </View>
             <Carousel
                 {...baseOptions}
                 loop

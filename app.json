@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "uk.jrinvestments.wi",
+      "bundleIdentifier": "com.jrinvestments.THFC",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Allow WiseHub to use Face ID."

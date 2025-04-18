@@ -1,5 +1,4 @@
-import { View, Text, ImageBackground, StyleSheet, Image, StatusBar, TextInput, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Image, StatusBar, TextInput, Alert } from 'react-native';
 import { colors } from '@/styles/colors';
 import { Button } from '@/components/button';
 import { AppleSignButton } from '@/components/applesignbutton';
@@ -8,6 +7,9 @@ import React, { useState } from 'react';
 import { securityServer } from '@/server/security-server';
 import { useAuth } from '@/context/auth';
 import { storeValueSecurely } from '@/secure/secureStore';
+
+// Define the yellow color used in the image
+const goldColor = '#FFC72C'; // Adjust this hex code if needed to match exactly
 
 export default function App() {
     const [showUsernamePasswordInput, setShowUsernamePasswordInput] = useState(false);
@@ -64,38 +66,34 @@ export default function App() {
     };
 
     return (
-        <ImageBackground
-            source={require('../assets/login-bg.png')}
-            style={styles.background}
-        >
-            {/* <StatusBar
-                backgroundColor={colors.white}
-            /> */}
-            <LinearGradient
-                colors={['rgba(45, 45, 45, 0)', '#083B41']}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.gradient}
-            >
-                <View style={{
-                    flex: 1,
-                }}>
-                    <View style={styles.imageWrapper}>
-                        <Image
-                            source={require('../assets/logo.png')}
-                        />
-                    </View>
-                </View>
+        <View style={styles.container}>
+            <StatusBar
+                barStyle="light-content"
+                backgroundColor={'#000000'}
+            />
+
+            <View style={styles.content}>
+                <Image
+                    source={require('../assets/tfhc.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
+            </View>
+
+            <View style={styles.footer}>
                 <View style={styles.buttonsContainer}>
                     {!showUsernamePasswordInput ? (
                         <>
-                            <Button onPress={() => setShowUsernamePasswordInput(true)}>
-                                <Button.Title>
-                                    Entrar com Email
+                            <Button
+                                style={styles.mainButton}
+                                onPress={() => setShowUsernamePasswordInput(true)}
+                            >
+                                <Button.Title style={styles.mainButtonText}>
+                                    Entrar
                                 </Button.Title>
                             </Button>
-                            <AppleSignButton />
-                            <GoogleAuthButton />
+                            <AppleSignButton title="Entrar com Google" />
+                            <GoogleAuthButton title="Entrar com Apple" />
                         </>
                     ) : (
                         <>
@@ -121,36 +119,59 @@ export default function App() {
                                     {isLoading ? "Entrando..." : "Confirmar Login"}
                                 </Button.Title>
                             </Button>
-                            <Button onPress={() => setShowUsernamePasswordInput(false)}>
-                                <Button.Title>
+                            <Button onPress={() => setShowUsernamePasswordInput(false)} style={styles.backButton}>
+                                <Button.Title style={styles.backButtonText}>
                                     Voltar
                                 </Button.Title>
                             </Button>
                         </>
                     )}
                 </View>
-            </LinearGradient>
-        </ImageBackground>
+
+                <View style={styles.poweredByContainer}>
+                    <Text style={styles.poweredByText}>powered by</Text>
+                    <Image
+                        source={require('../assets/jr-logo.png')}
+                        style={styles.jrLogo}
+                        resizeMode="contain"
+                    />
+                </View>
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    gradient: {
+    container: {
         flex: 1,
+        backgroundColor: colors.black.default,
     },
-    background: {
+    content: {
         flex: 1,
-    },
-    imageWrapper: {
-        alignItems: 'center',
         justifyContent: 'center',
-        flex: 1,
+        alignItems: 'center',
+        paddingHorizontal: '10%',
+    },
+    logo: {
+        width: '80%',
+        height: 100,
+    },
+    footer: {
+        paddingBottom: 40,
+        paddingHorizontal: '10%',
     },
     buttonsContainer: {
-        paddingBottom: 82,
-        paddingLeft: "10%",
-        paddingRight: "10%",
-        gap: 8,
+        gap: 12,
+        marginBottom: 30,
+    },
+    mainButton: {
+        backgroundColor: goldColor,
+        borderRadius: 8,
+    },
+    mainButtonText: {
+        color: colors.black.default,
+        fontWeight: 'bold',
+        fontSize: 16,
     },
     input: {
         height: 50,
@@ -162,5 +183,27 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         borderWidth: 1,
         borderColor: colors.gray[600]
+    },
+    backButton: {
+        backgroundColor: 'transparent',
+        borderWidth: 1,
+        borderColor: colors.gray[600],
+    },
+    backButtonText: {
+        color: colors.white.default,
+    },
+    poweredByContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    poweredByText: {
+        color: colors.gray[400],
+        fontSize: 12,
+    },
+    jrLogo: {
+        width: 100,
+        height: 20,
     }
 });

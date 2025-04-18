@@ -5,25 +5,42 @@ export const s = StyleSheet.create({
     container: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 0,
+        paddingVertical: 40,
+        backgroundColor: colors.white.default,
+    },
+    logoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     logo: {
-        width: 49,
-        height: 37,
+        width: 40,
+        height: 40,
+        backgroundColor: '#010101',
+        borderRadius: 999,
+    },
+    logoText: {
+        fontSize: 18,
+        fontFamily: fontFamily.montserratBold,
+        color: colors.black.default,
+        fontWeight: 'bold',
     },
     containerIcons: {
         flexDirection: 'row',
-        gap: 15
+        gap: 10,
     },
     iconContainer: {
-        padding: 8,
-        borderRadius: 10,
-        backgroundColor: colors.green.light,
+        width: 40,
+        height: 40,
+        borderRadius: 8,
+        backgroundColor: '#F5F5F5',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    title: {
-        fontFamily: fontFamily.bold,
-        fontSize: 20,
-        color: colors.black.dk1,
-    }
+    iconImage: {
+        width: 20,
+        height: 20,
+    },
 });

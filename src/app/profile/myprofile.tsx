@@ -1,10 +1,11 @@
+import React, { useEffect, useState } from "react";
+import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Button } from "@/components/globals/button";
 import { HeaderMenuBack } from "@/components/globals/headermenuback";
 import { useAuth } from "@/context/auth";
 import { colors } from "@/styles/colors";
+import { fontFamily } from "@/styles/theme";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import styled from "styled-components/native";
 import * as Application from 'expo-application';
 
@@ -13,11 +14,25 @@ const BASE_URL = "https://api.gauss.jrinvestments.uk/service/";
 const USER_UPDATE = "userupdate.php";
 const VIEW_USER = "users.php";
 
-function DeleteMyAccountModal({
-    visible,
-    onClose,
-    onDeleteAccount,
-    ...rest }) {
+interface PurchaseHistoryItem {
+    id: number;
+    product: string;
+    price: number;
+    createdat: string;
+    obs?: string;
+    qrcodecrypto?: string;
+    redeemed?: boolean;
+    productsub?: string;
+    idproductsub?: number;
+}
+
+interface DeleteMyAccountModalProps {
+    visible: boolean;
+    onClose: () => void;
+    onDeleteAccount: () => void;
+}
+
+function DeleteMyAccountModal({ visible, onClose, onDeleteAccount }: DeleteMyAccountModalProps) {
     return (
         <Modal
             visible={visible}
@@ -26,15 +41,15 @@ function DeleteMyAccountModal({
         >
             <ViewModal>
                 <ModalTitle>Are you sure you want to delete your account?</ModalTitle>
-                <Text>We’ll be sad to see you go! 😢 If you click Yes, your account and all its data will be permanently
-                    deleted. But if you click No, we’ll be thrilled to keep you with us! 🎉{'\n\n'}
+                <Text>We'll be sad to see you go! 😢 If you click Yes, your account and all its data will be permanently
+                    deleted. But if you click No, we'll be thrilled to keep you with us! 🎉{'\n\n'}
                     So, what do you say? Stick around for more fun, or ready to part ways?</Text>
                 <ViewOptions>
                     <ModalButtonYes onPress={onDeleteAccount}>
-                        <ModalButtonYesText>Yes - I’m sure, delete my account.</ModalButtonYesText>
+                        <ModalButtonYesText>Yes - I'm sure, delete my account.</ModalButtonYesText>
                     </ModalButtonYes>
                     <ModalButtonNo onPress={onClose}>
-                        <ModalButtonNoText>No - I’ve changed my mind, let’s stay together!</ModalButtonNoText>
+                        <ModalButtonNoText>No - I've changed my mind, let's stay together!</ModalButtonNoText>
                     </ModalButtonNo>
                 </ViewOptions>
             </ViewModal>
@@ -45,25 +60,27 @@ function DeleteMyAccountModal({
 export default function MyProfile() {
     const [isEditable, setIsEditable] = useState(false);
     const router = useRouter();
+    const auth = useAuth();
 
     const [myUserid, setMyUserId] = useState('');
     const [name, setName] = useState('');
-    //const [contato, setContato] = useState('');
     const [email, setEmail] = useState('');
-    // const [senha, setSenha] = useState('');
-    // const [senha2, setSenha2] = useState('');
     const [cpf, setCPF] = useState('');
     const [banco, setBanco] = useState('');
     const [agencia, setAgencia] = useState('');
     const [conta, setConta] = useState('');
     const [telefone, setTelefone] = useState('');
     const [selectedButton, setSelectedButton] = useState(0);
-    const [purchaseHistory, setPurchaseHistory] = useState([]);
+    const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>([]);
     const [showDeleteMyAccountModal, setShowDeleteMyAccountModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const idconfig = 12
 
-    const { user, signOut } = useAuth();
+    if (!auth || !auth.user) {
+        return <View><Text>Loading user...</Text></View>;
+    }
+    const { user, signOut } = auth;
     const userid = user?.userId
     const token = user?.token;
 
@@ -72,10 +89,11 @@ export default function MyProfile() {
     };
     const handleCancel = () => {
         setIsEditable(false);
-        router.replace("/profile");
+        fetchProfileData();
     };
 
     const handleSave = async () => {
+        if (!userid || !token) return;
         const UPDATE_USER_API = BASE_URL + USER_UPDATE
         try {
             const response = await fetch(UPDATE_USER_API, {
@@ -95,43 +113,46 @@ export default function MyProfile() {
                     "IDConfig": idconfig
                 }),
             });
-            //"Contato": contato,
-            // "Senha": senha,
-            // "Senha2": senha2,
 
             const data = await response.json();
-            Alert.alert(`$Success`, `$Your data has been saved successfully!`);
-            console.log('Profile updated successfully', data);
-
-            setIsEditable(false);
-        } catch (error) {
+            if (response.ok) {
+                Alert.alert("Success", "Your data has been saved successfully!");
+                setIsEditable(false);
+            } else {
+                throw new Error(data.msg || 'Failed to save profile');
+            }
+        } catch (error: any) {
             console.error('Error updating profile', error);
+            Alert.alert('Error', error.message || "Could not save profile.");
         }
     };
 
-
     const fetchProfileData = async () => {
+        if (!userid) return;
+        setIsLoading(true);
         const VIEW_USER_API = BASE_URL + VIEW_USER + '?id=' + userid
         try {
             const response = await fetch(VIEW_USER_API);
             const data = await response.json();
 
-
             setMyUserId(userid);
-            setName(data.Nome);
-            setEmail(data.Email);
-            setCPF(data.CPF);
-            setBanco(data.Banco);
-            setAgencia(data.Agencia);
-            setConta(data.Conta);
-            setTelefone(data.Telefone);
-
+            setName(data.Nome || '');
+            setEmail(data.Email || '');
+            setCPF(data.CPF || '');
+            setBanco(data.Banco || '');
+            setAgencia(data.Agencia || '');
+            setConta(data.Conta || '');
+            setTelefone(data.Telefone || '');
         } catch (error) {
             console.error('Error fetching profile data', error);
+            Alert.alert("Error", "Could not load profile data.");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const fetchPurchaseHistory = async () => {
+        if (!token) return;
         try {
             const response = await fetch(FX_HISTORY_PURCHASE, {
                 method: 'POST',
@@ -141,224 +162,165 @@ export default function MyProfile() {
                 body: JSON.stringify({
                     token
                 }),
-
             });
             const data = await response.json();
-            setPurchaseHistory(data.result);
+            setPurchaseHistory(data.result || []);
         } catch (error) {
             console.error('Error fetching purchase history', error);
         }
     }
 
+    const handleDeleteConfirm = () => {
+        setShowDeleteMyAccountModal(false);
+        Alert.alert("Account Deletion", "Account deletion process initiated (not implemented yet).");
+    };
+
     useEffect(() => {
         fetchProfileData();
         fetchPurchaseHistory();
-    }, []);
+    }, [userid]);
+
+    if (isLoading) {
+        return <View><Text>Loading...</Text></View>;
+    }
 
     return (
-
         <MainContainer>
             <HeaderMenuBack title="My Profile" color={colors.white.default} />
-            <View style={{
-                paddingHorizontal: 16,
-            }}>
-                {/* <HeadingContainer>
-        <Title>My profile</Title>
-      </HeadingContainer> */}
+            <View style={{ paddingHorizontal: 16, flex: 1 }}>
                 <OptionsContainer>
                     <Button style={{ flex: 1 }} isActive={selectedButton == 0} onPress={() => setSelectedButton(0)}>
-                        <Button.Text>My Profile</Button.Text>
+                        My Profile
                     </Button>
-
                     <Button style={{ flex: 1 }} isActive={selectedButton == 1} onPress={() => setSelectedButton(1)}>
-                        <Button.Text>Purchase History</Button.Text>
+                        Purchase History
                     </Button>
-
                 </OptionsContainer>
 
                 <ScrollContainer showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{
-                        paddingBottom: 50,
-                    }}
+                    contentContainerStyle={{ paddingBottom: 50 }}
                 >
-                    {
-                        selectedButton == 0 ? (
-                            <>
-                                <View style={{ flex: 1, alignItems: 'flex-start', justifyContent: 'center', paddingBottom: 20 }}>
-
-                                    <View style={styles.containerForm}>
-
-                                        <Title>Personal data</Title>
-                                        <Info>User ID:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={myUserid}
-                                            onChangeText={text => setName(text)}
-                                        />
-                                        <Info>Name:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={name}
-                                            onChangeText={text => setName(text)}
-                                        />
-                                        <Info>Email:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={email}
-                                            onChangeText={text => setEmail(text)}
-                                            textContentType={'emailAddress'}
-                                        />
-                                        <Info>CPF:</Info>
-                                        <InputField
-                                            style={styles.input}
-                                            editable={false}
-                                            value={cpf}
-                                        />
-
-                                    </View>
-
-                                    <View style={styles.containerForm}>
-                                        <Title>Contact Details:</Title>
-                                        <Info>Cel Phone:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={telefone}
-                                            onChangeText={text => setTelefone(text)}
-                                        />
-
-                                    </View>
-
-                                    <View style={styles.containerForm2}>
-                                        <Title>Bank data</Title>
-                                        <Info>Bank:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={banco}
-                                            onChangeText={text => setBanco(text)}
-                                        />
-
-                                        <Info>Agency:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={agencia}
-                                            onChangeText={text => setAgencia(text)}
-                                        />
-
-                                        <Info>Account:</Info>
-                                        <InputField
-                                            style={[styles.input, isEditable && styles.editableInput]}
-                                            editable={isEditable}
-                                            value={conta}
-                                            onChangeText={text => setConta(text)}
-                                        />
-
-                                    </View>
-
-                                    {!isEditable ? (
-                                        <>
-                                            <TouchableOpacity onPress={() => setShowDeleteMyAccountModal(true)} style={styles.deleteAccountButton}>
-                                                <Text style={styles.deleteAccountButtonText}>Delete my account</Text>
-                                            </TouchableOpacity>
-                                            {/* <TouchableOpacity onPress={() => router.push('/profile/changepassword')} style={styles.passwordButton}>
-                                                <Text style={styles.buttonText}>Change Password</Text>
-                                            </TouchableOpacity> */}
-                                            <TouchableOpacity onPress={() => signOut()} style={styles.outButton}>
-                                                <Text style={styles.outButtonText}>Log out of account</Text>
-                                            </TouchableOpacity>
-                                            <Text style={styles.versionText}>{Application.nativeApplicationVersion}</Text>
-                                        </>
-                                    ) : (
-                                        <></>
-                                    )}
-                                </View>
-                            </>
-                        ) : (
-                            <View style={{ paddingTop: 4 }}>
-                                {
-                                    purchaseHistory.map((item) => {
-                                        let ticketInfo = {}
-                                        console.log("item", item)
-                                        if (item.productsub != null &&
-                                            item.idproductsub > 0
-                                        ) {
-                                            ticketInfo.isTicket = true
-                                        }
-
-                                        if (Object.entries(ticketInfo).length > 0 && ticketInfo) {
-                                            console.log("ticketInfo", ticketInfo)
-                                        }
-
-                                        return <PurchasedItem
-                                            key={item.id}
-                                            itemName={item.product}
-                                            itemPrice={item.price}
-                                            itemPurchaseDate={item.createdat}
-                                            itemObservation={item.obs}
-                                            itemQRCodeCrypto={item.qrcodecrypto}
-                                            itemRedeemed={item.redeemed}
-                                            itemProductSub={item.productsub}
-                                            {...ticketInfo}
-                                        />
-                                    }
-                                    )
-                                }
+                    {selectedButton == 0 ? (
+                        <View style={{ paddingBottom: 20 }}>
+                            <View style={styles.containerForm}>
+                                <Title>Personal data</Title>
+                                <Info>User ID:</Info>
+                                <InputField
+                                    style={[styles.input]}
+                                    editable={false}
+                                    value={myUserid}
+                                />
+                                <Info>Name:</Info>
+                                <InputField
+                                    style={[styles.input, isEditable && styles.editableInput]}
+                                    editable={isEditable}
+                                    value={name}
+                                    onChangeText={(text: string) => setName(text)}
+                                />
+                                <Info>Email:</Info>
+                                <InputField
+                                    style={[styles.input, isEditable && styles.editableInput]}
+                                    editable={isEditable}
+                                    value={email}
+                                    onChangeText={(text: string) => setEmail(text)}
+                                    textContentType={'emailAddress'}
+                                    keyboardType={'email-address'}
+                                />
+                                <Info>CPF:</Info>
+                                <InputField
+                                    style={styles.input}
+                                    editable={false}
+                                    value={cpf}
+                                />
                             </View>
-                        )
-                    }
 
+                            <View style={styles.containerForm}>
+                                <Title>Contact Details:</Title>
+                                <Info>Cel Phone:</Info>
+                                <InputField
+                                    style={[styles.input, isEditable && styles.editableInput]}
+                                    editable={isEditable}
+                                    value={telefone}
+                                    onChangeText={(text: string) => setTelefone(text)}
+                                    keyboardType={'phone-pad'}
+                                />
+                            </View>
+
+                            <View style={styles.containerForm2}>
+                                <Title>Bank data</Title>
+                                <Info>Bank:</Info>
+                                <InputField
+                                    style={[styles.input, isEditable && styles.editableInput]}
+                                    editable={isEditable}
+                                    value={banco}
+                                    onChangeText={(text: string) => setBanco(text)}
+                                />
+                                <Info>Agency:</Info>
+                                <InputField
+                                    style={[styles.input, isEditable && styles.editableInput]}
+                                    editable={isEditable}
+                                    value={agencia}
+                                    onChangeText={(text: string) => setAgencia(text)}
+                                />
+                                <Info>Account:</Info>
+                                <InputField
+                                    style={[styles.input, isEditable && styles.editableInput]}
+                                    editable={isEditable}
+                                    value={conta}
+                                    onChangeText={(text: string) => setConta(text)}
+                                />
+                            </View>
+
+                            {!isEditable ? (
+                                <View style={{gap: 8}}>
+                                    <TouchableOpacity onPress={handleEdit} style={styles.editButton}>
+                                        <Text style={styles.buttonText}>Edit Profile</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => setShowDeleteMyAccountModal(true)} style={styles.deleteAccountButton}>
+                                        <Text style={styles.deleteAccountButtonText}>Delete my account</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => signOut && signOut()} style={styles.outButton}>
+                                        <Text style={styles.outButtonText}>Log out of account</Text>
+                                    </TouchableOpacity>
+                                    <Text style={styles.versionText}>{Application.nativeApplicationVersion}</Text>
+                                </View>
+                            ) : (
+                                <></>
+                            )}
+                        </View>
+                    ) : (
+                        <View style={{ paddingTop: 4 }}>
+                            {purchaseHistory.length > 0 ? (
+                                purchaseHistory.map((item) => (
+                                    <View key={item.id} style={{ padding: 10, borderBottomWidth: 1, borderColor: colors.gray[600] }}>
+                                        <Text style={{ color: colors.white.default }}>{item.product} - ${item.price}</Text>
+                                        <Text style={{ color: colors.gray[400] }}>{new Date(item.createdat).toLocaleDateString()}</Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={{ color: colors.gray[400], textAlign: 'center', marginTop: 20 }}>No purchase history.</Text>
+                            )}
+                        </View>
+                    )}
                 </ScrollContainer>
 
-                {!isEditable ? (
-                    <></>
-                ) : (
-                    <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-                        <Text style={{ color: 'black', fontWeight: 700, fontSize: 18 }}>Save</Text>
-                    </TouchableOpacity>
-                )}
-
-                <DeleteMyAccountModal
-                    visible={showDeleteMyAccountModal}
-                    onClose={() => setShowDeleteMyAccountModal(false)}
-                    onDeleteAccount={() => {
-                        fetch(DISCORD_LOG_WEBHOOK, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                                content: `Account Deletion Requested: User ID [${userid}], Email [${email}], Username [${name}]. Initiated by user within the app. All associated data scheduled for deletion, pending any legal retention requirements. ${JSON.stringify({
-                                    token,
-                                })}`,
-                            }),
-                        })
-
-                        fetch(PROFILE_REMOVE_MY_ACCOUNT, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                                token,
-                            }),
-                        })
-                            .then((res) => {
-                                console.log(res)
-                                console.log("Account deleted successfully");
-                                signOut();
-                            })
-                            .catch(error => {
-                                console.error('Error deleting account', error);
-                                setShowDeleteMyAccountModal(false);
-                            })
-                    }}
-                />
+                {isEditable && selectedButton == 0 ? (
+                    <View style={styles.editFooterButtons}>
+                        <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+                            <Text style={styles.buttonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: 16 }}>Save</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : null}
             </View>
+
+            <DeleteMyAccountModal
+                visible={showDeleteMyAccountModal}
+                onClose={() => setShowDeleteMyAccountModal(false)}
+                onDeleteAccount={handleDeleteConfirm}
+            />
         </MainContainer>
     );
 };
@@ -368,7 +330,6 @@ const ViewModal = styled.View`
   padding: 16px;
   border-radius: 4px;
   width: 80%;
-  /* align-items: center; */
   justify-content: center;
   margin: auto;
 `;
@@ -415,23 +376,10 @@ const ModalButtonNoText = styled.Text`
   text-align: center;
 `;
 
-const HeadingContainer = styled.View`
-  justify-content: center;
-  align-items: center;
-  `;
-
-const TitleContainer = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-`
-
 const MainContainer = styled.SafeAreaView`
     background-color: ${colors.green.light};
     flex: 1;
-    padding: 0px 12px;
-`
+`;
 
 const OptionsContainer = styled.View`
   flex-direction: row;
@@ -440,7 +388,8 @@ const OptionsContainer = styled.View`
 
 const ScrollContainer = styled.ScrollView`
   padding-top: 8px;
-`
+  flex: 1;
+`;
 
 const Title = styled.Text`
   font-weight: 600;
@@ -449,13 +398,14 @@ const Title = styled.Text`
   color: ${colors.green.dark};
   margin-top:8px;
   margin-bottom: 8px;
-`
+`;
+
 const Info = styled.Text`
   font-weight: 400;
   font-size: 20px;
   padding: 8px 0px 0px;
   color: ${colors.green.dark2};
-`
+`;
 
 const InputField = styled.TextInput`
   padding: 8px 0px;
@@ -464,12 +414,9 @@ const InputField = styled.TextInput`
   color: ${colors.black.default};
   font-weight: 400;
   font-size: 18px;
-`
+`;
 
 const styles = StyleSheet.create({
-    containerLogo: {
-        paddingBottom: 50,
-    },
     containerForm: {
         justifyContent: 'flex-start',
         width: '100%',
@@ -486,72 +433,58 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white.default,
         paddingHorizontal: 16,
         marginTop: 8,
-        marginBottom: 30,
         borderRadius: 4,
     },
     input: {
-        color: '#fff',
         textAlign: 'left',
         borderBottomWidth: 1,
         borderBottomColor: '#ADB1BB',
         paddingVertical: 10,
         fontSize: 20,
     },
+    editableInput: {
+        borderBottomWidth: 1,
+        borderColor: '#65686DD9',
+    },
     editButton: {
-        backgroundColor: 'transparent',
-        borderWidth: 0.5,
-        borderColor: '#E8E8E9',
-        width: '22%',
+        backgroundColor: colors.yellow,
+        width: '100%',
         alignItems: 'center',
-        alignSelf: 'flex-end',
-        paddingVertical: 8,
+        paddingVertical: 14,
         borderRadius: 4,
+        marginTop: 16,
+    },
+    editFooterButtons: {
+        flexDirection: 'row',
+        gap: 10,
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderTopColor: colors.gray[300],
     },
     saveButton: {
-        backgroundColor: '#FF8500',
-        width: '95%',
-        alignSelf: 'center',
+        backgroundColor: colors.yellow,
+        flex: 1,
         alignItems: 'center',
-        paddingVertical: 16,
+        paddingVertical: 14,
         borderRadius: 4,
-        marginHorizontal: 8,
-        position: 'absolute',
-        bottom: 8
     },
-    passwordButton: {
-        backgroundColor: '#15181E',
-        width: '100%',
+    cancelButton: {
+        backgroundColor: colors.gray[600],
+        flex: 1,
         alignItems: 'center',
-        paddingVertical: 16,
+        paddingVertical: 14,
         borderRadius: 4,
-        marginTop: 8,
-    },
-    outButton: {
-        width: '100%',
-        alignItems: 'center',
-        paddingTop: 16,
-        paddingBottom: 16,
-        marginTop: 8,
-        marginBottom: 8,
-        borderRadius: 4,
-        borderWidth: 1,
     },
     deleteAccountButton: {
         width: '100%',
         alignItems: 'center',
-        paddingTop: 12,
-        paddingBottom: 12,
+        paddingVertical: 12,
         borderRadius: 4,
         backgroundColor: '#ff3f34',
     },
     buttonText: {
         fontSize: 16,
-        fontWeight: '500',
-        color: '#ADB1B8E5'
-    },
-    outButtonText: {
-        fontSize: 16,
-        fontWeight: '500',
+        fontWeight: 'bold',
         color: colors.white.default
     },
     deleteAccountButtonText: {
@@ -559,18 +492,24 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#fff'
     },
-    link: {
-        color: '#E8E8E9',
+    outButton: {
+        width: '100%',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: colors.gray[600],
     },
-    editableInput: {
-        borderBottomWidth: 1,
-        borderColor: '#65686DD9',
+    outButtonText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: colors.white.default
     },
-    input: {},
     versionText: {
-        color: '#fff',
         paddingBottom: 25,
         color: '#3A3A3A',
         alignSelf: 'center',
+        marginTop: 16,
+        fontSize: 12,
     },
 });

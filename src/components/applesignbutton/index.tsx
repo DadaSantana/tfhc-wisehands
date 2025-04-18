@@ -10,7 +10,12 @@ import { s } from './styles';
 import { storeValueSecurely } from '@/secure/secureStore';
 import { useAuth } from '@/context/auth';
 
-export function AppleSignButton() {
+// Add a props interface to accept the title
+interface AppleSignButtonProps {
+    title?: string;
+}
+
+export function AppleSignButton({ title = "Entrar com Apple" }: AppleSignButtonProps) {
 
     const version = Application.nativeApplicationVersion ?? undefined;
     const device = Device.osName ?? undefined;
@@ -92,7 +97,7 @@ export function AppleSignButton() {
             onPress={handleAppleSignIn}
         >
             <Image source={require('@/assets/apple-icon.svg')} style={{ width: 24, height: 28 }} />
-            <Text style={s.title}>Entrar com Apple</Text>
+            <Text style={s.title}>{title}</Text>
         </TouchableOpacity>
     );
 }

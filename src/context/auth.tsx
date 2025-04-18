@@ -8,13 +8,15 @@ interface AuthContextType {
         userId: string,
         token: string,
         name: string,
-        profile: any
+        profile: any,
+        paid: boolean
         // paid: boolean,
         // approved: boolean,
         // terms: boolean,
         // roles: string[],
     ) => void;
     signOut: () => void;
+    setPaidCousers: () => void;
     user: any;
 }
 
@@ -42,10 +44,7 @@ interface User {
     userId: string;
     token: string;
     name: string;
-    // paid: boolean;
-    // approved: boolean;
-    // terms: boolean;
-    // roles: string[];
+    paid?: string;
     profile: any;
 }
 
@@ -57,34 +56,35 @@ export function Provider(props: ProviderProps) {
     const [user, setAuth] = useState<User | null | undefined>(undefined); // Use undefined for initial loading state
     const router = useRouter();
 
- // Load user data on mount
- useEffect(() => {
-    async function loadUserData() {
-        try {
-            const userId = await SecureStore.getItemAsync("userLogin");
-            const token = await SecureStore.getItemAsync("userToken");
-            // Load other user data as needed
-            
-            if (userId && token) {
-                // Retrieve other user data
-                const name = await SecureStore.getItemAsync("userName") || "";
-                const profileStr = await SecureStore.getItemAsync("userProfile");
-                const profile = profileStr ? JSON.parse(profileStr) : null;
-                
-                setAuth({ userId, token, name, profile });
-            } else {
-                setAuth(null); // Explicitly set to null when no valid auth
-            }
-        } catch (error) {
-            console.error("Failed to load auth data", error);
-            setAuth(null);
-        }
-    }
-    
-    loadUserData();
-}, []);
+    // Load user data on mount
+    useEffect(() => {
+        async function loadUserData() {
+            try {
+                const userId = await SecureStore.getItemAsync("userLogin");
+                const token = await SecureStore.getItemAsync("userToken");
+                // Load other user data as needed
 
-useProtectedRoute(user);
+                if (userId && token) {
+                    // Retrieve other user data
+                    const name = await SecureStore.getItemAsync("userName") || "";
+                    const profileStr = await SecureStore.getItemAsync("userProfile");
+                    const profile = profileStr ? JSON.parse(profileStr) : null;
+                    const paidStr = await SecureStore.getItemAsync("userPaid");
+
+                    setAuth({ userId, token, name, profile, paid: paidStr || undefined });
+                } else {
+                    setAuth(null); // Explicitly set to null when no valid auth
+                }
+            } catch (error) {
+                console.error("Failed to load auth data", error);
+                setAuth(null);
+            }
+        }
+
+        loadUserData();
+    }, []);
+
+    useProtectedRoute(user);
 
     const signOut = () => {
         GoogleSignin.signOut();
@@ -94,12 +94,21 @@ useProtectedRoute(user);
         router.replace("/");
     };
 
+    const setPaidCousers = () => {
+        if (user) {
+            setAuth({ ...user, paid: "Y" });
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
-                signIn: (userId, token, name, profile) =>
-                    setAuth({ userId, token, name, profile }),
+                signIn: (userId, token, name, profile, paid) => {
+                    SecureStore.setItemAsync("userPaid", String(paid));
+                    setAuth({ userId, token, name, profile, paid: String(paid) });
+                },
                 signOut,
+                setPaidCousers: setPaidCousers,
                 user,
             }}
         >

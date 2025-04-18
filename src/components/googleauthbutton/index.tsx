@@ -15,6 +15,11 @@ import { securityServer, SocialLoginParams } from "@/server/security-server";
 import { storeValueSecurely } from "@/secure/secureStore";
 import { useAuth } from "@/context/auth";
 
+// Add a props interface to accept the title
+interface GoogleAuthButtonProps {
+    title?: string;
+}
+
 GoogleSignin.configure({
     webClientId: WEB_CLIENT_ID,
     // scopes: ["https://www.googleapis.com/auth/drive.metadata.readonly"],
@@ -23,7 +28,7 @@ GoogleSignin.configure({
     iosClientId: IOS_CLIENT_ID
 });
 
-export function GoogleAuthButton() {
+export function GoogleAuthButton({ title = "Entrar com Google" }: GoogleAuthButtonProps) {
     const version = Application.nativeApplicationVersion;
     const device = Device.osName;
     const auth = useAuth();
@@ -102,7 +107,7 @@ export function GoogleAuthButton() {
             onPress={GoogleSignIn}
         >
             <Image source={require('@/assets/google-icon.svg')} style={{ width: 22.635, height: 23 }} />
-            <Text style={s.title}>Entrar com Google</Text>
+            <Text style={s.title}>{title}</Text>
         </TouchableOpacity>
     );
 }

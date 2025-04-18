@@ -2,13 +2,30 @@ import React from "react";
 import { router, Tabs, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { useFonts, Montserrat_700Bold, Montserrat_500Medium } from '@expo-google-fonts/montserrat';
+import { Inter_400Regular } from '@expo-google-fonts/inter';
 
 import { s } from './styles';
 import { Image } from "expo-image";
 import { colors } from "@/styles/colors";
 
 export default function Layout() {
-    const pathname = usePathname(); // Obtém o caminho da rota atual
+    const pathname = usePathname();
+
+    const [fontsLoaded, fontError] = useFonts({
+        Montserrat_700Bold,
+        Montserrat_500Medium,
+        Inter_400Regular,
+    });
+
+    if (!fontsLoaded && !fontError) {
+        return null;
+    }
+
+    if (fontError) {
+        console.error("Error loading fonts: ", fontError);
+        return <View><Text>Error loading fonts</Text></View>;
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -20,11 +37,11 @@ export default function Layout() {
                     tabBarStyle: pathname.includes("ticketmanager/ticket")
                         ? { display: "none" }  // 🔥 Esconde a tabBar quando a tela de pagamento estiver ativa
                         : {
-                            backgroundColor: colors.green.light,
+                            backgroundColor: '#010101',
                             borderTopColor: colors.green.light,
                             borderTopWidth: 16,
-                            borderTopRightRadius: 20,
-                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 32,
+                            borderTopLeftRadius: 32,
                             paddingVertical: 16,
                             height: Platform.OS === 'ios' ? 95 : 68,
                         },
@@ -49,9 +66,11 @@ export default function Layout() {
                             ),
                             tabBarButton: (props) =>
                                 <TouchableOpacity
-                                    {...props}
+                                    style={props.style}
                                     onPress={() => router.replace('/home')}
-                                />,
+                                >
+                                    {props.children}
+                                </TouchableOpacity>,
                         })
                     }}
                 />
@@ -64,9 +83,9 @@ export default function Layout() {
                         return ({
                             tabBarLabel: ({ color, focused }) =>
                                 focused ? (
-                                    <Text style={s.activePageText}>Ticketeria</Text>
+                                    <Text style={s.activePageText}>Ofertas</Text>
                                 ) : (
-                                    <Text style={s.activePageText}>Ticketeria</Text>
+                                    <Text style={s.activePageText}>Ofertas</Text>
                                 ),
                             tabBarIcon: ({ color, focused }) => (
                                 focused ? (
@@ -77,9 +96,11 @@ export default function Layout() {
                             ),
                             tabBarButton: (props) =>
                                 <TouchableOpacity
-                                    {...props}
-                                    onPress={() => router.replace('/ticketmanager')}
-                                />
+                                    style={props.style}
+                                    onPress={() => router.replace('/(donation)')}
+                                >
+                                    {props.children}
+                                </TouchableOpacity>,
                         })
                     }}
                 />
@@ -93,9 +114,9 @@ export default function Layout() {
                             // ),
                             tabBarLabel: ({ color, focused }) =>
                                 focused ? (
-                                    <Text style={s.activePageText}>Books</Text>
+                                    <Text style={s.activePageText}>Biblioteca</Text>
                                 ) : (
-                                    <Text style={s.activePageText}>Books</Text>
+                                    <Text style={s.activePageText}>Biblioteca</Text>
                                 ),
                             tabBarIcon: ({ color, size, focused }) => (
                                 focused ? (
@@ -106,9 +127,11 @@ export default function Layout() {
                             ),
                             tabBarButton: (props) =>
                                 <TouchableOpacity
-                                    {...props}
-                                    onPress={() => router.replace('/books')}
-                                />,
+                                    style={props.style}
+                                    onPress={() => router.replace('/academy')}
+                                >
+                                    {props.children}
+                                </TouchableOpacity>,
                             tabBarStyle: {
                                 // borderTopWidth: 16,
                                 paddingTop: 16,
@@ -129,9 +152,9 @@ export default function Layout() {
                         return ({
                             tabBarLabel: ({ color, focused }) =>
                                 focused ? (
-                                    <Text style={s.activePageText}>Academy</Text>
+                                    <Text style={s.activePageText}>Agenda</Text>
                                 ) : (
-                                    <Text style={s.activePageText}>Academy</Text>
+                                    <Text style={s.activePageText}>Agenda</Text>
                                 ),
                             tabBarIcon: ({ color, size, focused }) => (
                                 focused ? (
@@ -142,9 +165,11 @@ export default function Layout() {
                             ),
                             tabBarButton: (props) =>
                                 <TouchableOpacity
-                                    {...props}
-                                    onPress={() => router.replace('/academy')}
-                                />
+                                    style={props.style}
+                                    onPress={() => router.replace('/(events)')}
+                                >
+                                    {props.children}
+                                </TouchableOpacity>,
                         })
                     }}
                 />
